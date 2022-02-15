@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>车辆轨迹包含区域</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/3.21/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/3.21/esri/css/esri.css">
+
+    <style>
+        html, body, #map {
+            height: 100%; width: 100%; margin: 0; padding: 0;
+        }
+
+        #search {
+            z-index: 20;
+            margin: auto;
+            height: 95px;
+            width: 400px;
+            margin: auto;
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+        }
+
+        #info {
+            top: 100px;
+            color: #444;
+            height: auto;
+            font-family: arial;
+            left: 16px;
+            margin: 2px;
+            padding: 3px;
+            position: absolute;
+            width: 40px;
+            z-index: 40;
+            border: solid 1px #666;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+
+        html, body, #mapDiv {
+            padding:0;
+            margin:0;
+            height:100%;
+        }
+
+        #info button {
+            background-color: white;
+            padding: 2px;
+            text-align: center;
+            margin: 4px 4px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 30px;
+            border: 1px solid
+        }
+
+        #info button:hover {
+            padding: 2px;
+            text-align: center;
+            margin: 4px 4px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 30px;
+            border: 1px solid #1e90ff;
+            color: #1e90ff;
+        }
+
+    </style>
+
+    <script src="https://js.arcgis.com/3.21/"></script>
+    <script src="https://cdn.bootcss.com/jquery/1.10.2/jquery.min.js"></script>
+    <script>
+
+        var map, tb, ctxMenuForGraphics;
+        var selected;
+
+        require([
+            "esri/map",
+            "esri/layers/ArcGISTiledMapServiceLayer",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "dojo/_base/connect",
+            "esri/dijit/BasemapToggle",
+            "esri/toolbars/draw",
+            "esri/geometry/Polygon",
+            "esri/geometry/Polyline",
+            "esri/dijit/Search",
+            "dijit/registry",
+            "esri/dijit/Scalebar",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/SimpleFillSymbol",
+            "esri/symbols/PictureFillSymbol",
+            "esri/symbols/CartographicLineSymbol",
+            "esri/symbols/PictureMarkerSymbol",
+            "esri/geometry/Extent",
+            "esri/SpatialReference",
+            "esri/geometry/Point",
+            "esri/geometry/mathUtils",
+            "esri/geometry/ScreenPoint",
+            "esri/toolbars/edit",
+            "dijit/Menu",
+            "dijit/MenuItem",
+            "dijit/MenuSeparator",
+            "esri/graphic",
+            "esri/layers/GraphicsLayer",
+            "esri/Color",
+            "esri/dijit/Popup",
+            "esri/dijit/PopupTemplate",
+            "esri/InfoTemplate",
+            "esri/symbols/SimpleLineSymbol",
+            "dojo/dom-construct",
+            "dojo/dom",
+            "dojo/on",
+            "dojo/domReady!"
+        ], function(
+            Map,  ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer,
+            connect, BasemapToggle, Draw, Polygon,Polyline, Search, registry, Scalebar, SimpleMarkerSymbol, SimpleFillSymbol,
+            PictureFillSymbol, CartographicLineSymbol, PictureMarkerSymbol,
+            Extent, SpatialReference, Point, mathUtils, ScreenPoint, Edit, Menu, MenuItem, MenuSeparator,
+            Graphic, GraphicsLayer, Color, Popup, PopupTemplate, InfoTemplate, SimpleLineSymbol, domConstruct,
+            dom, on, domAttr
+        ) {
+            //创建popup弹出层
+            var popup = new Popup(null, domConstruct.create("div"));
+
+            //地图
+            map = new Map("map", {
+                center: [121.47003707885744, 31.24853148977224],
+                zoom: 5,
+                infoWindow: popup,
+                extent: new Extent(-122.68,45.53,-122.45,45.60, new SpatialReference({ wkid:4326 }))
+            });
+
+            //添加地图图层
+            var mapServiceURL = "http://cache1.arcgisonline.cn/arcgis/rest/services/ChinaOnlineCommunity/MapServer";
+            map.addLayer(new ArcGISTiledMapServiceLayer(mapServiceURL));
+
+            $.ajax({
+    			//请求地址
+    			url : "http://localhost:8080/datainfo/getAlldatainfo",
+    			//请求方式
+    			type : "get",
+    			//请求的媒体类型
+    			contentType : "application/json;charset=UTF-8",
+    			//数据，json字符串
+    			data : {
+    				"deviceid" : 1,
+    				"starttime" : "",
+    				"endtime" : ""
+    			},
+    			//请求成功
+    			success : function(data) {
+    				var datainfo =data.datainfo;
+    			    var tArray = new Array();
+    				for(var i=0;i<datainfo.length;i++){
+    					var array = new Array();
+    					array.push(datainfo[i].longitude);
+    					array.push(datainfo[i].latitude);
+    					tArray.push(array);
+    				}
+    				var tArray22 = new Array();
+    				tArray22.push(tArray)
+    				//创建用于渲染图形的符号
+    				// var lineSymbol=new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 0, 0]), 3);
+    				var fillSymbol = {
+        					type : "simple-fill",
+        					color : [ 227, 139, 79, 0.8 ],
+        					outline : {
+        						color : [ 0, 0,74 ],
+        						width : 2
+        					}
+        				};
+    				//创建多边形图形
+    				//创建多边形几何
+    				/* var polygon = {
+    					type : "polygon",
+    					rings : tArray
+    				}; */
+    				 var polylineJson = {
+    					    "paths":tArray22,
+    					    "spatialReference":{"wkid":4326}
+    					  }
+    				var polyLine = new Polygon(polylineJson);
+    				//将几何图形和符号添加到新图形
+    				var polygonGraphic = new Graphic( polyLine,fillSymbol);
+    				//将图形添加到视图的图形层
+    				//viewarea.graphics.addMany([polygonGraphic]);
+    				 //创建图层
+           			var gl = new GraphicsLayer();
+    				gl.add(polygonGraphic);
+    			    map.addLayer(gl);
+    			}
+    		});
+        });
+    </script>
+</head>
+
+
+<body  class="claro" style="font-size: 0.75em;">
+
+    <div id="info">
+        <div align="center">绘制</div>
+        <button id="Polygon">多边形</button>
+        <button id="FreehandPolygon">曲线图形 </button>
+    </div>
+
+
+    <div id="search"></div>
+
+    <div id="map" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'">
+
+    </div>
+
+</body>
+</html>

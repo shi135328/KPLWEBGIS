@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kpl.springboot.dao.UsersMapper">
+    <resultMap id="BaseResultMap" type="com.kpl.springboot.entity.Users" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="username" property="username" jdbcType="VARCHAR" />
+        <result column="password" property="password" jdbcType="VARCHAR" />
+        <result column="tel" property="tel" jdbcType="VARCHAR" />
+        <result column="address" property="address" jdbcType="VARCHAR" />
+        <result column="identity" property="identity" jdbcType="INTEGER" />
+        <result column="factoryid" property="factoryid" jdbcType="INTEGER" />
+        <result column="brokerid" property="brokerid" jdbcType="INTEGER" />
+        <result column="customid" property="customid" jdbcType="INTEGER" />
+    </resultMap>
+
+    <!-- 模糊查询 -->
+    <select id="findListByLike" resultMap="BaseResultMap" >
+        select * from users
+        <where>
+            <if test="keyword != null and keyword != ''">
+               and `username` like CONCAT('%',#{keyword},'%') 
+            </if>
+            <if test="identity != null and identity != ''">
+               and `identity`> #{identity}
+            </if>
+            <if test="factoryid != null and factoryid != ''">
+               and `factoryid`= #{factoryid}
+            </if>
+             <if test="brokerid != null and brokerid != ''">
+               and `brokerid`= #{brokerid}
+            </if>
+             <if test="customid != null and customid != ''">
+               and `customid`= #{customid}
+            </if>
+        </where>
+            
+    </select>
+ <!-- 模糊查询 -->
+    <select id="findSomeListByLike" resultMap="BaseResultMap" >
+        select * from users  where identity > #{identity}
+    </select>
+    <update id="updateUsers" parameterType="map">
+        update users
+        <set>
+            <if test="username != null and username != ''">
+                username = #{username},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+            <if test="tel != null and tel != ''">
+                tel = #{tel},
+            </if>
+            <if test="address != null and address != ''">
+                address = #{address},
+            </if>
+            <if test="identity != null">
+                `identity` = #{identity},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

@@ -1,0 +1,646 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta charset="utf-8">
+<!--字体图标-->
+<link href="../../javaex/pc/css/icomoon.css" rel="stylesheet" />
+<!--动画-->
+<link href="../../javaex/pc/css/animate.css" rel="stylesheet" />
+<!--骨架样式-->
+<link href="../../javaex/pc/css/common.css" rel="stylesheet" />
+<!--皮肤（缇娜）-->
+<link href="../../javaex/pc/css/skin/tina.css" rel="stylesheet" />
+<!--jquery，不可修改版本-->
+<script src="../../javaex/pc/lib/jquery-1.7.2.min.js"></script>
+<!--全局动态修改-->
+<script src="../../javaex/pc/js/common.js"></script>
+<!--核心组件-->
+<script src="../../javaex/pc/js/javaex.min.js"></script>
+<!--表单验证-->
+<script src="../../javaex/pc/js/javaex-formVerify.js"></script>
+<title>设备管理</title>
+<style>
+/*  .black_overlay {
+                display: none;
+                position: absolute;
+                top: 0%;
+                left: 0%;
+                width: 100%;
+                height: 100%;
+                background-color: black;
+                z-index: 1001;
+                -moz-opacity: 0.8;
+                opacity: .80;
+                filter: alpha(opacity=80);
+            } */
+.white_content {
+	display: none;
+	position: absolute;
+	top: 10%;
+	left: 10%;
+	width: 40%;
+	height: 40%;
+	border: 1px solid lightblue;
+	background-color: white;
+	z-index: 1002;
+	overflow: auto;
+}
+
+.white_content_small {
+	display: none;
+	position: absolute;
+	top: 20%;
+	left: 30%;
+	width: 40%;
+	height: 50%;
+	border: 16px solid lightblue;
+	background-color: white;
+	z-index: 1002;
+	overflow: auto;
+}
+
+#div-inline {
+	display: inline
+}
+</style>
+</head>
+
+<body>
+	<!--主体内容-->
+	<div class="list-content">
+		<!--块元素-->
+		<div class="block">
+			<!--页面有多个表格时，可以用于标识表格-->
+			<h2>设备列表</h2>
+			<!--右上角的返回按钮-->
+			<a href="javascript:history.back();">
+				<button class="button indigo radius-3"
+					style="position: absolute; right: 20px; top: 16px;">
+					<span class="icon-arrow_back"></span> 返回
+				</button>
+			</a>
+
+			<!--正文内容-->
+			<div class="main">
+				<!--表格上方的搜索操作-->
+				<div class="admin-search">
+
+					<div class="input-group">
+						<button class="button blue" id="btnfactory">所属厂商</button>
+						<select id="selectfactory">
+						</select>
+						&nbsp;&nbsp;
+						<button class="button blue" id="btnbroker">所属经销商</button>
+						<select id="selectbroker">
+						</select>
+						&nbsp;&nbsp;
+						<button class="button blue" id="btncustom">所属用户</button>
+						<select id="selectcustom">
+						</select> 
+						&nbsp;&nbsp;
+						<input id="keyword" type="text" class="text" placeholder="提示信息" />
+						<button id="searchBtn" class="button blue" onclick="search();">搜索</button>
+					</div>
+				</div>
+
+				<!--表格上方的操作元素，添加、删除等-->
+				<table id="table" class="table color2">
+					<thead>
+						<tr align="center">
+							<th>序号</th>
+							<th>设备名称</th>
+							<th>设备MAC</th>
+							<th>所属厂商</th>
+							<th>所属经销商</th>
+							<th>所属用户</th>
+							<th>操作</th>
+						</tr>
+					</thead>
+					<tbody id="tbody">
+						<!--<tr>-->
+						<!--<td class="checkbox"><input type="checkbox" class="fill listen-1-2" /> </td>-->
+						<!--<td>1</td>-->
+						<!--<td><button class="button blue">编辑</button><button class="button red">删除</button></td>-->
+						<!--</tr>-->
+					</tbody>
+				</table>
+
+				<div class="page">
+					<ul id="page" class="pagination"></ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- <div id="fade" class="black_overlay"></div>  -->
+	<div id="MyDiv" class="white_content">
+		<div
+			style="text-align: right; cursor: default; margin-top: 10px; margin-bottom: 10px;">
+			<span
+				style="font-size: 16px; margin-right: 17px; color: #56BE2D; font-weight: 600; cursor: pointer;"
+				onclick="CloseDiv('MyDiv')">关闭</span>
+		</div>
+		<div class="itempanel" id="label">
+			<!--正文内容-->
+			<form>
+				<!--文本框-->
+				<div class="unit clear">
+					<div class="left">
+						<span class="required">*</span>
+						<p class="subtitle">设备名</p>
+					</div>
+					<div class="right">
+						<input type="text" id="deviceName" class="text"
+							placeholder="请输入设备名称" />
+					</div>
+				</div>
+				<br>
+				<!--文本框-->
+				<div class="unit clear">
+					<div class="left">
+						<span class="required">*</span>
+						<p class="subtitle">设备MAC</p>
+					</div>
+					<div class="right">
+						<input type="text" id="devicecode" class="text"
+							placeholder="请输入32位设备MAC" />
+					</div>
+				</div>
+				<br>
+				<!--提交按钮-->
+				<div class="unit clear" style="width: 800px;">
+					<div style="text-align: center;" id="btn">
+						<!--表单提交时，必须是input元素，并指定type类型为button，否则ajax提交时，会返回error回调函数-->
+						<!-- <input type="button"  onclick="CloseDiv('MyDiv')" class="button no" value="返回" /> -->
+						<!-- <input type="button" onclick="sureupdate()" class="button yes" value="确认修改" /> -->
+					</div>
+				</div>
+			</form>
+		</div>
+
+	</div>
+
+	<script type="text/javascript">
+		var user;
+		/* var factoryid;
+		var brokerid;
+		var customid; */
+		var identity
+		// 页面一加载, 展示数据列表, 每页10条
+		$(document).ready(function() {
+			CloseDiv('MyDiv');
+			$.get("/user/currUser", function(data) {
+				var code = data.code;
+				user = data.data;
+				if (code == 200) {
+					console.log(user)
+					identity = user.identity;
+					/* factoryid = user.factoryid;
+					brokerid = user.brokerid;
+					customid = user.customid; */
+					// 默认查询所有
+					/* if(user.identity==0){//超级管理员
+					 rander(1,"",10,,);
+					}else if(user.identity==1){//厂商
+					 rander(1,"",10,user.factoryid,);
+					}else if(user.identity==2){//经销商 */
+					rander(1, "", 10,user.factoryid,user.brokerid,user.customid);
+					changeselect();//三级下拉框查询
+
+					// }
+				}
+				return false;
+			});
+
+		});
+
+		// 渲染数据表格
+		function rander(currPage, keyword,pageSize,factoryid,brokerid,customid) {
+			// 定义全局 分页属性
+			$
+					.ajax({
+						//请求方式
+						type : "POST",
+						//请求的媒体类型
+						contentType : "application/json;charset=UTF-8",
+						//请求地址
+						url : "/deviceinfo/list",
+						//数据，json字符串
+						data : JSON.stringify({
+							"currPage" : currPage,
+							"keyword" : keyword,
+							"pageSize" : pageSize,
+							"factoryid" : factoryid,
+							"brokerid" : brokerid,
+							"customid" : customid
+						}),
+						//请求成功
+						success : function(result) {
+							console.log(result);
+							// 获取集合属性
+							var r = result.data;
+							var total = r.total;
+							var currPage = r.currPage;
+							var pageSize = r.pageSize;
+							// 分页信息
+							console.log("currPage:" + r.currPage
+									+ "\t pageSize:" + r.pageSize + "\t total:"
+									+ r.total);
+
+							var array = r.list;
+							var text = "";
+							$
+									.each(
+											array,
+											function(index, value) {
+												console.log(value);
+												var num = pageSize
+														* (currPage - 1)
+														+ index + 1;
+												text += "<tr align='center'><td>"
+														+ value.id
+														+ "</td><td>"
+														+ value.devicename
+														+ "</td><td>"
+														+ value.devicecode
+														+ "</td><td>"
+														+ value.factoryname
+														+ "</td>";
+												if (value.brokername == null) {
+													text += " <td>未选择</td>";
+												} else {
+													text += " <td>"
+															+ value.brokername
+															+ "</td>";
+												}
+												if (value.customname == null) {
+													text += " <td>未选择</td>";
+												} else {
+													text += " <td>"
+															+ value.customname
+															+ "</td>";
+												}
+												text += "<td>"
+														+ "<button class='button green' onclick='updateDevice("
+														+ value.id
+														+ ")'>编辑</button> &nbsp;<button class='button yellow empty' onclick='delDevice("
+														+ value.id
+														+ ")'>删除</button></td></tr>";
+											});
+
+							$("#tbody").html(text);
+
+							// 向上取整去总页数
+							var totalPage = Math.ceil(total / pageSize);
+							console.log("totalPage:" + totalPage);
+							// 清空分页组件
+							$("#page").empty();
+							// 调用分页组件
+							javaex.page({
+								id : "page",
+								pageCount : totalPage, // 总页数
+								currentPage : currPage,// 默认选中第几页
+								perPageCount : pageSize, // 每页显示多少条，不填时，不显示该条数选择控件
+								isShowJumpPage : false, // 是否显示跳页
+								totalNum : total, // 总条数，不填时，不显示
+								position : "center",
+								callback : function(rtn) {
+									// 翻页
+									rander(rtn.pageNum, keyword,
+											rtn.perPageCount,user.factoryid,user.brokerid,user.customid);
+								}
+							});
+						},
+						//请求失败，包含具体的错误信息
+						error : function(e) {
+							console.log(e.status);
+							console.log(e.responseText);
+						}
+					});
+		}
+
+		// 搜索
+		function search() {
+			// 获取搜索关键字
+			var keyword = $("#keyword").val();
+			// 搜索结果渲染表格
+			rander(1, keyword, 10,user.factoryid,user.brokerid,user.customid);
+		}
+
+		// 编辑
+		function updateDevice(id) {
+			$("#btn").empty();
+			$
+					.ajax({
+						//请求地址
+						url : "/deviceinfo/getdevicebyid",
+						//请求方式
+						type : "get",
+						//请求的媒体类型
+						contentType : "application/json;charset=UTF-8",
+						//数据，json字符串
+						data : {
+							"id" : id
+						},
+						//请求成功
+						success : function(data) {
+							$("#deviceName").val(data.deviceinfo.devicename)
+							$("#devicecode").val(data.deviceinfo.devicecode)
+							$("#btn")
+									.append(
+											'<input type="button"  onclick="CloseDiv(MyDiv)" class="button no" value="返回" /><input type="button" onclick="sureupdate('
+													+ id
+													+ ')" class="button yes" value="确认修改" />');
+						}
+					});
+			ShowDiv('MyDiv');
+		}
+		//确定修改
+		// 编辑
+		function sureupdate(id) {
+			// 获取输入内容
+			var deviceName = $("#deviceName").val();
+			var devicecode = $("#devicecode").val();
+			// 校验文本
+			if (deviceName == "") {
+				javaex.optTip({
+					content : "设备名称不能为空!",
+					type : "error"
+				});
+
+				return false;
+			}
+			console.log(devicecode.length)
+			if (devicecode.length != 30) {
+				javaex.optTip({
+					content : "设备MAC不标准!",
+					type : "error"
+				});
+
+				return false;
+			}
+			$.ajax({
+				//请求地址
+				url : "/deviceinfo/update",
+				//请求方式
+				type : "post",
+				//请求的媒体类型
+				contentType : "application/json;charset=UTF-8",
+				//数据，json字符串
+				data : JSON.stringify({
+					"id" : id,
+					"devicename" : $("#deviceName").val(),
+					"devicecode" : $("#devicecode").val()
+				}),
+				//请求成功
+				success : function(data) {
+					javaex.message({
+						content : "修改成功",
+						type : "success"
+					});
+					CloseDiv('MyDiv');
+					rander(1, "", 10,user.factoryid,user.brokerid,user.customid);
+				}
+			});
+		}
+		// 删除
+		function delDevice(id) {
+			console.log("delete Device" + id);
+			javaex.confirm({
+				content : "确定要删除么",
+				callback : "delCallback(" + id + ")"
+			});
+		}
+
+		function delCallback(id) {
+			// ajax
+			$.get("/deviceinfo/delete", {
+				"id" : id
+			}, function(data) {
+				var code = data.code;
+				if (code == 200) {
+					javaex.message({
+						content : "删除成功",
+						type : "success"
+					});
+
+					// 删除成功, 刷新页面
+					setTimeout(function() {
+						window.location.reload();
+					}, 1500)
+				}
+			});
+
+			// 如果你想阻止弹出层关闭，直接 return false; 即可
+			//return false;
+		}
+
+		function ShowDiv(show_div) {
+			document.getElementById(show_div).style.display = 'block';
+		};
+		//关闭弹出层  
+		function CloseDiv(show_div) {
+			document.getElementById(show_div).style.display = 'none';
+		};
+		function changeselect() {
+			if (user.identity == 0) {//超级管理员
+				$.post("/factoryinfo/getfactoryinfo", function(data) {
+					var factoryinfo = data.factoryinfo;
+					console.log(factoryinfo)
+					// 设置用户昵称
+					// $("#username").text(user.username);
+					$("#selectfactory").append( "<option value=''>不选择</option>");
+					for (var i = 0; i < factoryinfo.length; i++) {
+						$("#selectfactory").append(
+								"<option value="+factoryinfo[i].id+">"
+										+ factoryinfo[i].factoryname
+										+ "</option>");
+					}
+					javaex.select({
+						id : "selectfactory",
+						isSearch : false
+					});
+					
+					$("#selectbroker").append( "<option value=''>不选择</option>");
+					javaex.select({
+						id : "selectbroker",
+						isSearch : false
+					});
+					$("#selectcustom").append( "<option value=''>不选择</option>");
+					javaex.select({
+						id : "selectcustom",
+						isSearch : false
+					});			
+					
+					$("#ul-selectfactory option").click(function(){//厂商切换
+						$("#selectbroker").empty();
+						$("#selectcustom").empty();
+						if($('#selectfactory option:selected').val()==""){
+							$("#selectbroker").append( "<option value=''>不选择</option>");
+							javaex.select({
+								id : "selectbroker",
+								isSearch : false
+							});
+						}else{
+							$.get("/brokerinfo/listbyfactory", {
+								"factoryid" : $('#selectfactory option:selected').val()
+							}, function(data) {
+									var brokerinfo = data.brokerinfo;
+									console.log(brokerinfo)
+									// 设置用户昵称
+									// $("#username").text(user.username);
+									$("#selectbroker").append( "<option value=''>不选择</option>");
+									for (var i = 0; i < brokerinfo.length; i++) {
+										$("#selectbroker").append(
+												"<option value="+brokerinfo[i].id+">"
+														+ brokerinfo[i].brokername
+														+ "</option>");
+									}
+									javaex.select({
+										id : "selectbroker",
+										isSearch : false
+									});
+									$("#selectcustom").empty();
+									$("#selectcustom").append( "<option value=''>不选择</option>");
+									javaex.select({
+										id : "selectcustom",
+										isSearch : false
+									});
+									$("#ul-selectbroker option").click(function(){//经销商商切换
+										$("#selectcustom").empty();
+										if($('#selectbroker option:selected').val()==""){
+											$("#selectcustom").append( "<option value=''>不选择</option>");
+											javaex.select({
+												id : "selectcustom",
+												isSearch : false
+											});
+										}else{
+											$.get("/custominfo/listbybroker", {
+												"brokerid" : $('#selectbroker option:selected').val()
+											}, function(data) {
+													var custominfo = data.custominfo;
+													console.log(custominfo)
+													$("#selectcustom").append( "<option value=''>不选择</option>");
+													for (var i = 0; i < custominfo.length; i++) {
+														$("#selectcustom").append(
+																"<option value="+custominfo[i].id+">"
+																		+ custominfo[i].customname
+																		+ "</option>");
+													}
+													javaex.select({
+														id : "selectcustom",
+														isSearch : false
+													});
+													$("#ul-selectcustom option").click(function(){//用户切换
+														rander(1, "", 10, $('#selectfactory option:selected').val(),$('#selectbroker option:selected').val(),$('#selectcustom option:selected').val());
+													})
+											});
+										}
+										rander(1, "", 10, $('#selectfactory option:selected').val(),$('#selectbroker option:selected').val(),$('#selectcustom option:selected').val());
+									})
+							});
+						}
+					
+						rander(1, "", 10, $('#selectfactory option:selected').val(),$('#selectbroker option:selected').val(),$('#selectcustom option:selected').val());
+					})
+					
+				});
+			} else if (user.identity == 1) {//厂商登录
+				 document.getElementById("btnfactory").style.display='none';  
+				 document.getElementById("selectfactory").style.display='none';  
+				 
+					$.get("/brokerinfo/listbyfactory", {
+						"factoryid" : user.factoryid
+					}, function(data) {
+							var brokerinfo = data.brokerinfo;
+							console.log(brokerinfo)
+							// 设置用户昵称
+							// $("#username").text(user.username);
+							$("#selectbroker").append( "<option value=''>不选择</option>");
+							for (var i = 0; i < brokerinfo.length; i++) {
+								$("#selectbroker").append(
+										"<option value="+brokerinfo[i].id+">"
+												+ brokerinfo[i].brokername
+												+ "</option>");
+							}
+							javaex.select({
+								id : "selectbroker",
+								isSearch : false
+							});
+							$("#selectcustom").empty();
+							$("#selectcustom").append( "<option value=''>不选择</option>");
+							javaex.select({
+								id : "selectcustom",
+								isSearch : false
+							});
+							$("#ul-selectbroker option").click(function(){//经销商商切换
+								$("#selectcustom").empty();
+							console.log($('#selectbroker option:selected').val())
+								if($('#selectbroker option:selected').val()==""){
+									$("#selectcustom").append( "<option value=''>不选择</option>");
+									javaex.select({
+										id : "selectcustom",
+										isSearch : false
+									});
+								}else{
+									$.get("/custominfo/listbybroker", {
+										"brokerid" : $('#selectbroker option:selected').val()
+									}, function(data) {
+											var custominfo = data.custominfo;
+											console.log(custominfo)
+											$("#selectcustom").append( "<option value=''>不选择</option>");
+											for (var i = 0; i < custominfo.length; i++) {
+												$("#selectcustom").append(
+														"<option value="+custominfo[i].id+">"
+																+ custominfo[i].customname
+																+ "</option>");
+											}
+											javaex.select({
+												id : "selectcustom",
+												isSearch : false
+											});
+											$("#ul-selectcustom option").click(function(){//用户切换
+												rander(1, "", 10, user.factoryid,$('#selectbroker option:selected').val(),$('#selectcustom option:selected').val());
+											})
+									});
+								}
+								rander(1, "", 10, user.factoryid,$('#selectbroker option:selected').val(),$('#selectcustom option:selected').val());
+							})
+					});
+
+			} else if (user.identity == 2) {//经销商登录
+				 document.getElementById("btnfactory").style.display='none';  
+				 document.getElementById("selectfactory").style.display='none';  
+				 document.getElementById("btnbroker").style.display='none';  
+				 document.getElementById("selectbroker").style.display='none';  
+				 $.get("/custominfo/listbybroker", {
+						"brokerid" : user.brokerid
+					}, function(data) {
+							var custominfo = data.custominfo;
+							console.log(custominfo)
+							$("#selectcustom").append( "<option value=''>不选择</option>");
+							for (var i = 0; i < custominfo.length; i++) {
+								$("#selectcustom").append(
+										"<option value="+custominfo[i].id+">"
+												+ custominfo[i].customname
+												+ "</option>");
+							}
+							javaex.select({
+								id : "selectcustom",
+								isSearch : false
+							});
+							$("#ul-selectcustom option").click(function(){//用户切换
+								rander(1, "", 10, user.factoryid,user.brokerid,$('#selectcustom option:selected').val());
+							})
+					});
+			}else if (user.identity == 3) {//经销商登录
+				document.getElementById("btnfactory").style.display='none';  
+				 document.getElementById("selectfactory").style.display='none';  
+				 document.getElementById("btnbroker").style.display='none';  
+				 document.getElementById("selectbroker").style.display='none';  
+				 document.getElementById("btncustom").style.display='none';  
+				 document.getElementById("selectcustom").style.display='none';  
+			}
+		}
+	</script>
+</body>
+</html>

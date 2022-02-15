@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kpl.springboot.dao.DataInfoMapper">
+    <resultMap id="BaseResultMap" type="com.kpl.springboot.entity.DataInfo" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+         <result column="deviceid" property="deviceid" jdbcType="INTEGER" />
+         <result column="devicename" property="devicename" jdbcType="VARCHAR" />
+         <result column="longitudeflag" property="longitudeflag" jdbcType="INTEGER" />
+         <result column="longitude" property="longitude" jdbcType="DOUBLE" />
+         <result column="latitudeflag" property="latitudeflag" jdbcType="INTEGER" />
+         <result column="latitude" property="latitude" jdbcType="DOUBLE" />
+         <result column="speed" property="speed" jdbcType="DOUBLE" />
+         <result column="direction" property="direction" jdbcType="DOUBLE" />
+         <result column="height" property="height" jdbcType="DOUBLE" />
+         <result column="satellite" property="satellite" jdbcType="INTEGER" />
+         <result column="islocation" property="islocation" jdbcType="INTEGER" />
+         <result column="gettime" property="gettime" jdbcType="TIMESTAMP" />
+         <result column="macstate" property="macstate" jdbcType="INTEGER" />
+         <result column="outsideU" property="outsideU" jdbcType="DOUBLE" />
+    </resultMap>
+    <!-- 模糊查询 倒序 -->
+    <select id="selectDatainfoList" resultMap="BaseResultMap" >
+        select * from datainfo
+        <where>
+        	 <if test="deviceid != null and deviceid != ''  and deviceid != 0">
+               and `deviceid`= #{deviceid}
+            </if>
+            <if test="starttime != null and starttime != ''">
+               and `gettime`> #{starttime}
+            </if>
+            <if test="endtime != null and endtime != ''">
+               and  #{endtime} > `gettime`
+            </if>
+            
+        </where>
+         order by id desc
+    </select>
+    
+    
+      <!-- 模糊查询 -->
+    <select id="finddataInfoList" resultMap="BaseResultMap" >
+        select * from datainfo
+        <where>
+               `deviceid` in (
+               
+               select id from deviceinfo
+			         <where>
+			             <if test="factoryid != null and factoryid != ''">
+			               and `factoryid` = #{factoryid}
+			            </if>
+			            <if test="brokerid != null and brokerid != ''">
+			                and `brokerid` = #{brokerid}
+			            </if>
+			        </where>
+               )
+            <if test="keyword != null and keyword != ''">
+               and `devicename` like CONCAT('%',#{keyword},'%') 
+            </if>
+        </where>
+             order by gettime desc
+    </select>
+   
+</mapper>

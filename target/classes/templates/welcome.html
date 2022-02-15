@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title>Simple Map</title>
+    
+    
+    
+ <link rel="stylesheet" type="text/css"
+	href="../arcgis_js_api/library/3.9/3.9compact/js/dojo/dijit/themes/tundra/tundra.css" />
+<link rel="stylesheet" type="text/css"
+	href="../arcgis_js_api/library/3.9/3.9compact/js/esri/css/esri.css" />
+<link rel="stylesheet" type="text/css"
+	href="../arcgis_js_api/library/3.9/3.9compact/js/dojo/dijit/themes/claro/claro.css" />
+<script type="text/javascript"
+	src="../arcgis_js_api/library/3.9/3.9compact/init.js"></script>
+	
+	
+	<!--   <link rel="stylesheet" href="https://js.arcgis.com/3.39/esri/css/esri.css" />
+
+    <script src="https://js.arcgis.com/3.39/"></script> -->
+    <!--jquery，不可修改版本-->
+<script src="../javaex/pc/lib/jquery-1.7.2.min.js"></script>
+ <link rel="stylesheet" type="text/css" href="../javaex/jquery-easyui-1.4.4/themes/metro/easyui.css">
+<link rel="stylesheet" type="text/css" href="../javaex/jquery-easyui-1.4.4/themes/icon.css">
+<link rel="stylesheet" type="text/css" href="../javaex/jquery-easyui-1.4.4/demo/demo.css">	    
+<script type="text/javascript" src="../javaex/jquery-easyui-1.4.4/jquery.min.js"></script>
+<script type="text/javascript" src="../javaex/jquery-easyui-1.4.4/jquery.easyui.min.js"></script>  
+<script type="text/javascript" src="../javaex/jquery-easyui-1.4.4/locale/easyui-lang-zh_CN.js"></script> 
+    <style>
+      html, body, #map {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+
+    <script>
+    var map;
+  	var coor;
+  	var num;
+      $(function() {
+    	 	startmap();
+    	}); 
+      function startmap(){
+    	  require(
+        		  ["esri/map", "esri/dijit/OverviewMap", "dojo/parser",
+    			"esri/geometry/webMercatorUtils",
+    			"dijit/layout/BorderContainer", "dijit/layout/ContentPane",
+    			"dojo/domReady!"], 
+    		function(Map, OverviewMap, parser, webMercatorUtils) {
+        			  parser.parse();
+    		        map = new esri.Map("map", {
+    		          logo : false,
+    		          center: [110.649274,34.748521], // longitude, latitude
+    		          zoom: 5
+    		        });
+    		        var myTiledMapServiceLayer = new esri.layers.ArcGISTiledMapServiceLayer(
+    				"http://cache1.arcgisonline.cn/arcgis/rest/services/ChinaOnlineCommunity/MapServer");
+    				map.addLayer(myTiledMapServiceLayer);
+    				coor = function(x, y) {
+    					return webMercatorUtils.lngLatToXY(x + 0.006108,
+    							y - 0.001133);//添加偏移量纠正偏差
+    				}
+          });
+    	  setTimeout(function (){
+    		  getuser();
+    		}, 1000);
+    	
+      }
+      function getuser(){
+    	  $.get("/user/currUser", function(data){
+              var code = data.code;
+               user = data.data;
+              if (code == 200) {
+              	console.log(user)
+              	 // 默认查询所有
+                getJosnData(user.factoryid,user.brokerid,user.customid);
+              	checkDeviceState(user.factoryid,user.brokerid,user.customid);
+  			}
+              return false;
+          });
+      }
+      
+      function getJosnData(factoryid,brokerid,customid) {
+    	   if(factoryid==null){
+    		  factoryid=0;
+    	   }
+    	   if(brokerid==null){
+    		   brokerid=0;
+     	   }
+    	   if(customid==null){
+    		   customid=0;
+     	   }
+    	  $.ajax({
+    		  //请求地址
+              url : "/deviceinfo/getAlldeviceinfo",
+              //请求方式
+              type : "get",
+              //请求的媒体类型
+              contentType: "application/json;charset=UTF-8",
+              //数据，json字符串
+              data : {"factoryid":factoryid,"brokerid":brokerid,"customid":customid},
+              //请求成功
+              success : function(data) {
+            	  var deviceList = data.deviceinfo;
+    				drawPoint(deviceList,0);
+    			}
+    		});
+    	  setTimeout("getJosnData("+factoryid+");", 60000);
+  		/* $.ajax({
+  			url : "http://localhost:8080/HarvesterFGS/getDeviceAll",
+  			type : "get",
+  			data : "",
+  			success : function(data) {
+  				var deviceList = data.device;
+  				drawPoint(deviceList);
+  			}
+  		}); */
+  		//setTimeout("getJosnData();", 6000);
+  	}
+
+      function drawPoint(deviceList,flag) {
+  		map.graphics.clear();
+  		for (var i = 0; i < deviceList.length; i++) {
+  			if (deviceList[i].longitude == 0.0 && deviceList[i].latitude == 0.0) {
+  				deviceList[i].longitude = 113.5526;
+  				deviceList[i].latitude = 34.826816;
+  			}
+  			var loc = coor(deviceList[i].longitude, deviceList[i].latitude);
+  			var location = new esri.geometry.Point(loc[0], loc[1],
+  					map.spatialReference);
+  			if(flag==0){
+  				map.centerAndZoom(location, 5);
+  			}else{
+  				map.centerAndZoom(location, 7);
+  			}
+  			var symbol = new esri.symbol.PictureMarkerSymbol("../javaex/img/mac.png", 20, 20);
+  			// 每个元素的属性值  
+  			var attr = {
+  				"id" : deviceList[i].devicemac,
+  				"longitude" : deviceList[i].longitude,
+  				"latitude" : deviceList[i].latitude,
+  				"speed" : deviceList[i].speed
+  			};
+  			var id = deviceList[i].id;
+  			var devicename = deviceList[i].devicename;
+  			var longitudeflag = deviceList[i].longitudeflag;
+  			var longitude = deviceList[i].longitude;
+  			var latitudeflag = deviceList[i].latitudeflag;
+  			var latitude = deviceList[i].latitude;
+  			var speed = deviceList[i].speed;
+  			var direction =deviceList[i].direction; 
+  			var height =deviceList[i].height; 
+  			var satellite =deviceList[i].satellite; 
+  			var islocation = deviceList[i].islocation;
+  			var gettime = dateFormat("YYYY-mm-dd HH:MM:SS", new Date(deviceList[i].gettime));
+  			
+  			var macstate = deviceList[i].macstate;
+  			var outsideU = deviceList[i].outsideU;
+  			//东西经
+  			var longitudeword;
+  			if(longitudeflag==0){
+  				longitudeword="东经";
+  			}else{
+  				longitudeword="西经";
+  			}
+  			//南北纬
+  			var latitudeword;
+  			if(latitudeflag==0){
+  				latitudeword="南纬";
+  			}else{
+  				latitudeword="北纬";
+  			}
+  			console.log(islocation)
+  			//定位状态 
+  			var islocationword;
+  			if(islocation==0){
+  				islocationword="未定位";
+  			}else if(islocation==1){
+  				islocationword="单点定位";
+  			}else if(islocation==2){
+  				islocationword="差分定位";
+  			}else if(islocation==3){
+  				islocationword="固定解 ";
+  			}else if(islocation==4){
+  				islocationword="浮点解";
+  			}
+  			console.log(islocationword)
+  			//机器状态
+  			var macstateword;
+  			if(macstate==0){
+  				macstateword="打火静止";
+  			}else if(macstate==1){
+  				macstateword="打火工作";
+  			}else if(macstate==2){
+  				macstateword="熄火静止";
+  			}else if(macstate==3){
+  				macstateword="熄火移动";
+  			}
+  	
+  			var infoTemplate= new esri.InfoTemplate(
+  							"车辆详细信息",
+  							"设备编号："
+  									+ id
+  									+ "</br>设备名称:"
+  									+devicename
+  									+ "</br>经度:"
+  									+longitudeword+longitude
+  									+ "<br/>纬度:"
+  									+ latitudeword+latitude
+  									+ "<br/>速度:"
+  									+ speed
+  									+ "<br/>方向:"
+  									+ direction
+  									+ "<br/>海拔:"
+  									+ height
+  									+ "<br/>卫星数量:"
+  									+ satellite
+  									+ "<br/>定位状态:"
+  									+ islocationword
+  									+ "<br/>采集时间点:"
+  									+ gettime
+  									+ "<br/>机器状态:"
+  									+ macstateword
+  									+ "<br/>外部电压:"
+  									+ outsideU
+						  			+ "</br><div><input id='viewMeter' type='submit' value='查看轨迹' onclick='javascript:openTraj("
+									+ id
+									+ ")'</div>"
+						  			+ "</br><div><input id='viewarea' type='submit' value='查看区域' onclick='javascript:openarea("
+									+ id
+									+ ")'</div>");
+  									
+  			var graphic = new esri.Graphic(location, symbol, attr, infoTemplate);
+  			map.graphics.add(graphic);
+  			selGraphic = graphic;
+  			map.infoWindow.resize(300, 600);
+  			//map.infoWindow.setContent(graphic.getContent());
+  			
+  		}
+  		dojo.connect(map.graphics, "onClick", function(e){
+  			var i = map.graphics.graphics.length;
+  		    while (i--) {
+  		        if (map.graphics.graphics[i] === e.graphic) {
+  		            num=i;
+  		        }
+  		    }
+  		});
+  		 map.infoWindow.setContent(map.graphics.graphics[num].getContent())
+  	}
+     function openTraj(deviceid) {
+  		window.open("device/device-trail.html?deviceid="+ deviceid,'newwindow',
+  						'height=600,width=1024,top=0,left=0,right=0,bottom=0,toolbar=no,menubar=no,scrollbars=no, resizable=no,location=no, status=no');
+  	}
+     function openarea(deviceid) {
+   		window.open("device/device-area.html?deviceid="+ deviceid,'newwindow',
+   						'height=600,width=1024,top=0,left=0,right=0,bottom=0,toolbar=no,menubar=no,scrollbars=no, resizable=no,location=no, status=no');
+   	}
+//控制页面载入
+	function page(url) {
+		$("#page").attr("src", url);
+	}
+ function dateFormat(fmt, date) {
+	    let ret;
+	    const opt = {
+	        "Y+": date.getFullYear().toString(),        // 年
+	        "m+": (date.getMonth() + 1).toString(),     // 月
+	        "d+": date.getDate().toString(),            // 日
+	        "H+": date.getHours().toString(),           // 时
+	        "M+": date.getMinutes().toString(),         // 分
+	        "S+": date.getSeconds().toString()          // 秒
+	        // 有其他格式化字符需求可以继续添加，必须转化成字符串
+	    };
+	    for (let k in opt) {
+	        ret = new RegExp("(" + k + ")").exec(fmt);
+	        if (ret) {
+	            fmt = fmt.replace(ret[1], (ret[1].length == 1) ? (opt[k]) : (opt[k].padStart(ret[1].length, "0")))
+	        };
+	    };
+	    return fmt;
+	}
+	//查看设备状态
+	function checkDeviceState(factoryid,brokerid,customid) {
+		 if(factoryid==null){
+   		  factoryid=0;
+   	   }
+   	   if(brokerid==null){
+   		   brokerid=0;
+    	   }
+   	   if(customid==null){
+   		   customid=0;
+    	   }
+		$('#devOnlineWindow').window({
+			modal : false,
+			minimizable : false,
+			maximizable : false,
+			iconCls : 'pic_6',
+			left : 1200,
+			top : 110
+		});
+		console.log(factoryid)
+		$('#treedeviceState').tree(
+				{
+					url : "/deviceinfo/getDeviceLocation?factoryid="+factoryid+"&brokerid="+brokerid+"&customid="+customid+"",
+		            //请求方式
+		            type : "get",
+		            //请求的媒体类型
+		            contentType: "application/json;charset=UTF-8",
+					lines : true,
+					onClick : function(node) {
+						console.log(node)
+						var deviceid = node.deviceid;
+						//定位GPS坐标点
+						getDevicePosition(deviceid);
+					}
+				});
+		$('#treedeviceState').tree('collapseAll'); 
+		$('#devOnlineWindow').window('open');
+	}
+	function getDevicePosition(deviceid){
+		$.ajax({
+			//请求地址
+			url : "/deviceinfo/getdevicebyid",
+			//请求方式
+			type : "get",
+			//请求的媒体类型
+			contentType : "application/json;charset=UTF-8",
+			//数据，json字符串
+			data : {
+				"id" : deviceid
+			},
+			//请求成功
+			success : function(data) {
+				var array = new Array();
+				array.push(data.deviceinfo);
+				drawPoint(array,1)
+			}
+		});
+	}
+    </script>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <!-- 设备在线状态窗口 -->
+		<div id="devOnlineWindow" class="easyui-dialog" title="设备状态" toolbar="#dlg-toolbar"
+			data-options="iconCls:'icon-save',modal:true,closed:true"
+			style="width: 320px; height: 560px; padding: 0px;">
+			<div class="easyui-panel" style="width: 100%; height: 100%;">
+				<ul id="treedeviceState" class="easyui-tree"
+					data-options="method:'get',animate:true">
+				</ul>
+			</div>
+		</div>
+  </body>
+</html>

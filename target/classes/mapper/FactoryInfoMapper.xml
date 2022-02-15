@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kpl.springboot.dao.FactoryInfoMapper">
+    <resultMap id="BaseResultMap" type="com.kpl.springboot.entity.FactoryInfo" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+         <result column="factoryname" property="factoryname" jdbcType="VARCHAR" />
+
+    </resultMap>
+    <!-- 模糊查询 倒序 -->
+    <select id="selectfactoryinfo" resultMap="BaseResultMap" >
+        select * from factoryinfo order by id desc
+    </select>
+    
+     <select id="findFactoryListByLike" resultMap="BaseResultMap" >
+        select * from factoryinfo
+        <where>
+            <if test="_parameter != null and _parameter != ''">
+               and `factoryname` like CONCAT('%',#{_parameter},'%') 
+            </if>
+        </where>
+        order by id desc
+    </select>
+</mapper>

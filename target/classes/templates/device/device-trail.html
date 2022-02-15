@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css"
+	href="../../arcgis_js_api/library/3.9/3.9compact/js/dojo/dijit/themes/tundra/tundra.css" />
+<link rel="stylesheet" type="text/css"
+	href="../../arcgis_js_api/library/3.9/3.9compact/js/esri/css/esri.css" />
+<link rel="stylesheet" type="text/css"
+	href="../../arcgis_js_api/library/3.9/3.9compact/js/dojo/dijit/themes/claro/claro.css" />
+<script type="text/javascript"
+	src="../../arcgis_js_api/library/3.9/3.9compact/init.js"></script>
+
+<!--   <link rel="stylesheet" href="https://js.arcgis.com/3.39/esri/css/esri.css" />
+
+    <script src="https://js.arcgis.com/3.39/"></script> -->
+<!--jquery，不可修改版本-->
+<script src="../../javaex/pc/lib/jquery-1.7.2.min.js"></script>
+<link rel="stylesheet" type="text/css"
+	href="../../My97DatePicker/skin/WdatePicker.css" />
+<script src="../../My97DatePicker/WdatePicker.js"></script>
+<style>
+html, body, #mapDiv {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+</style>
+<script type="text/javascript">
+	var map;
+	var coor;
+	var list;
+	var icount;
+	var iii = 0;
+	var graphictrajpt;
+	var lonvalue = 0.005400;//经度偏移
+	var latvalue = 0.001900;//纬度偏移
+      $(function() {
+    	 	startmap();
+    	}); 
+      function startmap(){
+    	  require(
+        		  ["esri/map",  "dojo/parser","esri/geometry/webMercatorUtils",
+    			"dijit/layout/BorderContainer", "dijit/layout/ContentPane",
+    			"dojo/domReady!"], 
+    		function(Map,  parser, webMercatorUtils) {
+        			  parser.parse();
+    		        map = new esri.Map("mapDiv", {
+    		          logo : false,
+    		          center: [110.649274,34.748521], // longitude, latitude
+    		          zoom: 5
+    		        });
+    		        var myTiledMapServiceLayer = new esri.layers.ArcGISTiledMapServiceLayer(
+    				"http://cache1.arcgisonline.cn/arcgis/rest/services/ChinaOnlineCommunity/MapServer");
+    				map.addLayer(myTiledMapServiceLayer);
+    				coor = function(x, y) {
+    					return webMercatorUtils.lngLatToXY(x + lonvalue,y-latvalue);//添加偏移量纠正偏差 - 0.001133
+    				}
+          });
+      }
+	
+	     function drawtraj(){
+	    	 console.log(145)
+	    	 var starttime = $('#starttime').val();
+	    	 var endtime = $('#endtime').val();
+	    	 console.log(starttime)
+	    	 if(starttime!=""&&endtime!=""&&(starttime>endtime)){
+	    		 	alert("开始时间不能大于结束时间");
+	    	 }else{
+	    	  	 var deviceid = window.location.search.substring(1).split("=")[1];
+		    	 console.log(deviceid)
+		    	// $.get("/datainfo/getAlldatainfo", function(data){
+				$.ajax({
+		       		  //请求地址
+		                 url : "/datainfo/getAlldatainfo",
+		                 //请求方式
+		                 type : "get",
+		                 //请求的媒体类型
+		                 contentType: "application/json;charset=UTF-8",
+		                 //数据，json字符串
+		                 data : {"deviceid":deviceid,"starttime":starttime,"endtime":endtime},
+		                 //请求成功
+		                 success : function(data) {	    		 
+		    		 console.log(data)
+					 var tArray = new Array();
+			        var p;
+			        var polyLineJson = {
+			            "paths":tArray,
+			            "spatialReference":{"wkid":102100}
+			        };
+			        var tArray0 = new Array();
+					for(i=0;i<data.datainfo.length;i++){
+					   list = data.datainfo;
+						//加偏移量
+					   var point =LonLatToWemMac((data.datainfo[i].longitude+lonvalue),(data.datainfo[i].latitude-latvalue));//-0.001133
+					   p=[point.x,point.y];
+					   tArray0.push(p);
+			           icount = data.datainfo.length;
+					}
+					 polyLineJson.paths.push(tArray0);
+					 console.log(polyLineJson.paths);
+					drawPolyline(polyLineJson);
+					addwindowInfo(data.datainfo);
+				 }});
+	    	 }
+	     }
+	     
+	     
+	     function addwindowInfo(deviceList){
+	    	 for (var i = 0; i < deviceList.length; i++) {
+	 			var loc = coor(deviceList[i].longitude, deviceList[i].latitude);
+	 			var location = new esri.geometry.Point(loc[0], loc[1],
+	 					map.spatialReference);
+	 			var pointSymbol = esri.symbol.SimpleMarkerSymbol().setStyle(esri.symbol.SimpleMarkerSymbol.STYLE_SOLID).setColor(new dojo.Color([255,0,0,0.5]));
+	 			//var pointSymbol = new esri.symbol.SimpleMarkerSymbol();
+	 			//pointSymbol.setOutline = new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new Color([255,0, 0]), 1);
+	 			pointSymbol.setSize(5);
+	 			//pointSymbol.setColor(new Color([255, 0, 0]));		
+	 			// 每个元素的属性值  
+	 			var attr = {
+	 				"id" : deviceList[i].devicecode,
+	 				"longitude" : deviceList[i].longitude,
+	 				"latitude" : deviceList[i].latitude,
+	 				"speed" : deviceList[i].speed
+	 			};
+	 			var id = deviceList[i].devicecode;
+	 			var longitude = deviceList[i].longitude;
+	 			var latitude = deviceList[i].latitude;
+	 			var speed = deviceList[i].speed;	
+	 			var time = deviceList[i].uptime;
+ 				var	infoTemplate = new esri.InfoTemplate(
+ 							"车辆详细信息",
+ 							"设备编号："
+ 									+ id
+ 									+ "</br>经度:"
+ 									+ longitude
+ 									+ "<br/>纬度:"
+ 									+ latitude
+ 									+ "<br/>速度:"
+ 									+ speed
+ 									+"<br/>时间:"
+ 									+time
+ 									);
+ 				var graphic = new esri.Graphic(location, pointSymbol, attr, infoTemplate);
+ 				map.graphics.add(graphic);
+ 				selGraphic = graphic;
+ 				map.infoWindow.resize(300, 300);
+ 				map.infoWindow.setContent(graphic.getContent());
+	    	 }
+	     }
+	 	
+	     //画polyline
+	     function drawPolyline(points){
+	    	 map.graphics.clear();	    	 
+	    	 var symbol = new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255,0,0]),2);
+	    	 var line = new esri.geometry.Polyline(points);
+	   	     var graphic = new esri.Graphic(line, symbol);
+	    	 //定位到当前图形
+	    	 var taxLotExtent = line.getExtent();
+	    	 map.setExtent(taxLotExtent,true);	    	
+	    	 map.graphics.add(graphic);
+	     }
+	
+	function go() {
+		map.graphics.remove(graphictrajpt);
+		var pointSymbol = new esri.symbol.SimpleMarkerSymbol();
+		pointSymbol.setOutline = new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255,0, 0 ]), 1);
+		pointSymbol.setSize(150);
+		pointSymbol.setColor(new dojo.Color([0, 255, 0,0.35]));		
+		var geometry =LonLatToWemMac((list[iii].longitude+lonvalue),(list[iii].latitude-latvalue));
+		graphictrajpt = new esri.Graphic(geometry, pointSymbol);
+		map.graphics.add(graphictrajpt);
+		
+		var extent = map.extent;
+		if (!extent.contains(graphictrajpt.geometry)) {
+			map.centerAt(geometry);
+		}
+		iii++;
+	}
+
+	function gogps() {
+		go();
+		if (iii < icount) {
+			window.setTimeout("gogps()", 200);
+		} else {
+			window.clearTimeout("gogps()");
+			iii=0;
+		}
+	}
+
+	function LonLatToWemMac(x, y) {
+		var xx = (x * 20037508.342789 / 180);
+		var yy = Math.log(Math.tan((90 + y) * Math.PI / 360)) / (Math.PI / 180);
+		yy = (yy * 20037508.342789 / 180);
+		return new esri.geometry.Point(xx, yy, map.spatialReference);
+	}
+</script>
+</head>
+<body style="padding: 0px;">
+	<div class="easyui-layout"
+		style="width: 100%; height: 100%; padding: 0px">
+		<div data-options="region:'north'" style="height: 38px">
+			<table>
+				<tr align="left">
+					<td align="right"><span id="dea_passwordlabel1" class="label">开始时间:</span></td>
+					<td colspan="5">
+					 <input class="easyui-datetimebox" type="date" id="starttime" name="starttime" style="width: 200px;" data-options="required:true" />
+						<span id="dea_passwordlabel2"
+						class="label">结束时间:</span> <input class="easyui-datetimebox" type="date"
+						id="endtime" name="endtime" style="width: 200px;"
+						data-options="required:true" /> <input type='submit' value="生成轨迹"
+						onclick="drawtraj()" /><input type='submit' value="播放"
+						onclick="gogps()" /></td>
+				</tr>
+			</table>
+		</div>
+		<!--<div data-options="region:'center',iconCls:'icon-ok'">
+			<div data-dojo-type="dijit/layout/BorderContainer"
+				data-dojo-props="design:'headline', gutters:false"
+				style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
+				<div id="mapDiv" data-dojo-type="dijit/layout/ContentPane"
+					data-dojo-props="region:'center'"
+					style="width: 100%; height: 100%; padding: 0px; margin: 0px; border: 0px solid #000;">
+				</div>
+			</div>
+		</div>-->
+		<div id="mapDiv"></div>
+	</div>
+
+</body>
+</html>

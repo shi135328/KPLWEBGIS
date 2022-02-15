@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kpl.springboot.dao.CustomInfoMapper">
+    <resultMap id="BaseResultMap" type="com.kpl.springboot.entity.CustomInfo" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+         <result column="customname" property="customname" jdbcType="VARCHAR" />
+		<result column="factoryid" property="factoryid" jdbcType="INTEGER" />
+		<result column="factoryname" property="factoryname" jdbcType="VARCHAR" />
+		<result column="brokerid" property="brokerid" jdbcType="INTEGER" />
+		<result column="brokername" property="brokername" jdbcType="VARCHAR" />
+    </resultMap>
+    <!-- 模糊查询 倒序 -->
+    <select id="selectcustominfo" resultMap="BaseResultMap" >
+        select * from custominfo order by id desc
+    </select>
+    
+     <select id="findCustomListByLike" resultMap="BaseResultMap" >
+        select * from custominfo
+        <where>
+            <if test="_parameter != null and _parameter != ''">
+               and `customname` like CONCAT('%',#{_parameter},'%') 
+            </if>
+        </where>
+        order by id desc
+    </select>
+     <select id="findCustomList" resultMap="BaseResultMap" >
+        select * from custominfo
+        <where>
+            <if test="factoryid != null and factoryid != ''">
+               and `factoryid`= #{factoryid}
+            </if>
+            <if test="brokerid != null and brokerid != ''">
+               and `brokerid`= #{brokerid}
+            </if>
+        </where>
+        order by id desc
+    </select>
+    
+</mapper>

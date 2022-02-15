@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta charset="utf-8">
+<!-- 标题栏LOGO -->
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<!--字体图标-->
+<link href="../javaex/pc/css/icomoon.css" rel="stylesheet" />
+<!--动画-->
+<link href="../javaex/pc/css/animate.css" rel="stylesheet" />
+<!--骨架样式-->
+<link href="../javaex/pc/css/common.css" rel="stylesheet" />
+<!--皮肤（缇娜）-->
+<link href="../javaex/pc/css/skin/tina.css" rel="stylesheet" />
+<!--jquery，不可修改版本-->
+<script src="../javaex/pc/lib/jquery-1.7.2.min.js"></script>
+<!--全局动态修改-->
+<script src="../javaex/pc/js/common.js"></script>
+<!--核心组件-->
+<script src="../javaex/pc/js/javaex.min.js"></script>
+<!--表单验证-->
+<script src="../javaex/pc/js/javaex-formVerify.js"></script>
+<title>后台管理</title>
+<style>
+</style>
+</head>
+<body>
+	<!--顶部导航-->
+	<div class="admin-navbar">
+		<div class="admin-container-fluid clear">
+			<!--logo名称-->
+			<div class="admin-logo">农机服务网</div>			
+			
+			<!--右侧-->
+			<ul class="admin-navbar-nav fr">
+				<li>
+					<a href="javascript:;">欢迎您，<span id="username">管理员</span></a>
+					<ul class="dropdown-menu" style="right: 10px;">
+						<li><a href="/logout">退出当前账号</a></li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+	</div>
+	
+	<!--主题内容-->
+	<div class="admin-mian">
+		<!--左侧菜单-->
+		<div class="admin-aside admin-aside-fixed">
+            <!-- 应用标题  -->
+			<div id="admin-toc" class="admin-toc">
+				<div class="menu-box">
+					<div id="menu" class="menu">
+						<ul>
+                            <li class="menu-item hover">
+								<a href="javascript:page('welcome');"><i class="icon-home2"></i>首页</a>
+							</li>
+ 							
+							<li class="menu-item">
+                                <a href="javascript:;">设备管理<i class="icon-keyboard_arrow_left"></i></a>
+                                <ul>
+									<li><a href="javascript:page('device/device-list');">设备列表</a></li>
+									<li><a href="javascript:page('device/device-add');">新增设备</a></li>
+								</ul>
+                            </li>
+                            <li class="menu-item">
+                                <a href="javascript:;">数据展示<i class="icon-keyboard_arrow_left"></i></a>
+                                <ul>
+									<li><a href="javascript:page('data/data-list');">历史数据</a></li>
+									<li><a href="javascript:page('data/data-list');">数据分析</a></li>
+								</ul>
+                            </li>
+                            <li class="menu-item" id="factorymanager" style="display:none">
+                                <a href="javascript:;">厂商管理<i class="icon-keyboard_arrow_left"></i></a>
+                                <ul>
+									<li><a href="javascript:page('factory/factory-list');">厂商列表</a></li>
+									<li><a href="javascript:page('factory/factory-add');">新增厂商</a></li>
+								</ul>
+                            </li> 
+							<li class="menu-item" id="brokermanager" style="display:none">
+                                <a href="javascript:;">经销商管理<i class="icon-keyboard_arrow_left"></i></a>
+                                <ul>
+									<li><a href="javascript:page('broker/broker-list');">经销商列表</a></li>
+									<li><a href="javascript:page('broker/broker-add');">新增经销商</a></li>
+								</ul>
+                            </li> 
+                            <li class="menu-item" id="custommanager" style="display:none">
+                                <a href="javascript:;">用户管理<i class="icon-keyboard_arrow_left"></i></a>
+                                <ul>
+									<li><a href="javascript:page('custom/custom-list');">用户列表</a></li>
+									<li><a href="javascript:page('custom/custom-add');">新增用户</a></li>
+								</ul>
+                            </li>
+                            <li class="menu-item" id="usermanager" style="display:none">
+								<a href="javascript:;">帐户中心<i class="icon-keyboard_arrow_left"></i></a>
+								<ul>
+									<li><a href="javascript:page('user/user-info');">个人信息</a></li>
+                                    <li><a href="javascript:page('user/user-list');">帐户管理</a></li>
+                                    <li><a href="javascript:page('user/user-add');">添加帐户</a></li>
+								</ul>
+							</li> 
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!--iframe载入内容-->
+		<div class="admin-markdown">
+			<iframe id="page" src="welcome"></iframe>
+		</div>
+	</div>
+</body>
+<script>
+	var hightUrl = "xxxx";
+	javaex.menu({
+		id : "menu",
+		isAutoSelected : true,
+		key : "",
+		url : hightUrl
+	});
+	
+	$(function() {
+		//getaddress();
+		// 设置左侧菜单高度
+		setMenuHeight();
+	});
+	
+	/**
+	 * 设置左侧菜单高度
+	 */
+	function setMenuHeight() {
+		var height = document.documentElement.clientHeight - $("#admin-toc").offset().top;
+		height = height - 10;
+		$("#admin-toc").css("height", height+"px");
+	}
+	
+	// 控制页面载入
+	function page(url) {
+		$("#page").attr("src", url);
+	}
+
+    $(document).ready(function(){
+        // 页面一加载, 读取登录用户信息
+        // get读取参数
+        $.get("/user/currUser", function(data){
+            var code = data.code;
+            var user = data.data;
+            if (code == 200) {
+                // 设置用户昵称
+                $("#username").text(user.username);
+            	if(user.identity==0){//超级管理员
+            		$("#factorymanager").css('display','block');
+            		$("#brokermanager").css('display','block');
+            		$("#custommanager").css('display','block');
+            		$("#usermanager").css('display','block');
+            	}else if(user.identity==1){//厂商
+            		$("#brokermanager").css('display','block');
+            		$("#custommanager").css('display','block');
+            		$("#usermanager").css('display','block');
+            	}else if(user.identity==2){//经销商
+            		$("#custommanager").css('display','block');
+            		$("#usermanager").css('display','block');
+            	}else if(user.identity==3){//用户
+            	}
+			}
+
+            return false;
+        });
+    });
+    function getaddress(){
+    	 if (navigator.geolocation){
+    		 alert(1)
+             navigator.geolocation.getCurrentPosition(
+                 function (position) {
+                    latitude = position.coords.latitude;//获取纬度
+                    longitude = position.coords.longitude;//获取经度
+                    console.log("经度"+longitude);
+                    console.log("纬度"+latitude);
+                   	alert("经度"+longitude);
+                   	alert("纬度"+latitude);
+                 });
+         }else{
+            alert("不支持定位功能");
+         }
+    }
+    
+</script>
+</html>

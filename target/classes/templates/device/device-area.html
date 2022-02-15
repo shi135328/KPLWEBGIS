@@ -1,0 +1,143 @@
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport"
+	content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Intro to graphics | Sample | ArcGIS API for JavaScript
+	4.22</title>
+
+<link rel="stylesheet"
+	href="https://js.arcgis.com/4.22/esri/themes/light/main.css" />
+<script src="https://js.arcgis.com/4.22/"></script>
+<script src="../../javaex/pc/lib/jquery-1.7.2.min.js"></script>
+<style>
+html, body, #viewDiv {
+	padding: 0;
+	margin: 0;
+	height: 100%;
+	width: 100%;
+}
+</style>
+
+<script>
+	var Graphicarea;
+	var viewarea;
+	var Maparea;
+      require(["esri/Map",  "esri/views/MapView","esri/Graphic"], (
+        Map,
+        MapView,
+        Graphic
+      ) => {
+    	  Maparea=Map;
+        Graphicarea=Graphic;
+        MapViewarea=MapView;
+        drawarea();
+      });
+      
+      function drawarea(){
+    	  var map = new Maparea({
+				basemap: "osm"
+				//"osm"
+			});
+    	  	 var starttime = $('#starttime').val();
+	    	 var endtime = $('#endtime').val();
+	    	 console.log(starttime)
+	    	 if(starttime!=""&&endtime!=""&&(starttime>endtime)){
+	    		 	alert("开始时间不能大于结束时间");
+	    	 }else{
+	    	  	 var deviceid = window.location.search.substring(1).split("=")[1];
+	    	  	 $.ajax({
+	    	  			//请求地址
+	    	  			url : "/datainfo/getAlldatainfo",
+	    	  			//请求方式
+	    	  			type : "get",
+	    	  			//请求的媒体类型
+	    	  			contentType : "application/json;charset=UTF-8",
+	    	  			//数据，json字符串
+	    	  			data : {
+	    	  				"deviceid" : deviceid,
+	    	  				"starttime" : starttime,
+	    	  				"endtime" : endtime
+	    	  			},
+	    	  			//请求成功
+	    	  			success : function(data) {
+	    	  				var datainfo =data.datainfo;
+	    	  			    var tArray = new Array();
+	    	  				for(var i=0;i<datainfo.length;i++){
+	    	  					var array = new Array();
+	    	  					array.push(datainfo[i].longitude);
+	    	  					array.push(datainfo[i].latitude);
+	    	  					tArray.push(array);
+	    	  				}
+	    	  				
+	    	  				 const viewarea = new MapViewarea({
+	    	  			          center: [datainfo[0].longitude,datainfo[0].latitude],
+	    	  			          container: "viewDiv",
+	    	  			          map: map,
+	    	  			          zoom: 7
+	    	  			        });
+	    	  				
+	    	  				//创建用于渲染图形的符号
+	    	  				// var lineSymbol=new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 0, 0]), 3);
+	    	  				 const fillSymbol = {
+	    	  			          type: "simple-fill", // autocasts as new SimpleFillSymbol()
+	    	  			          color: [227, 139, 79, 0.8],
+	    	  			          outline: {
+	    	  			            // autocasts as new SimpleLineSymbol()
+	    	  			            color: [0, 0, 74],
+	    	  			            width: 2
+	    	  			          }
+	    	  			        };
+	    	  				//创建多边形图形
+	    	  				//创建多边形几何
+	    	  				 // Create a polygon geometry
+	    	  		        const polygon = {
+	    	  		          type: "polygon", // autocasts as new Polygon()
+	    	  		          rings: tArray
+	    	  		        };
+	    	  				// Add the geometry and symbol to a new graphic
+	    	  		        const polygonGraphic = new Graphicarea({
+	    	  		          geometry: polygon,
+	    	  		          symbol: fillSymbol
+	    	  		        });
+	    	  		        viewarea.graphics.addMany([polygonGraphic]);
+	    	  				//将几何图形和符号添加到新图形
+	    	  			}
+	    	  		});
+	    	 }
+      }
+    </script>
+</head>
+
+<body style="padding: 0px;">
+	<div class="easyui-layout"
+		style="width: 100%; height: 100%; padding: 0px">
+		<div data-options="region:'north'" style="height: 38px">
+			<table>
+				<tr align="left">
+					<td align="right"><span id="dea_passwordlabel1" class="label">开始时间:</span></td>
+					<td colspan="5"><input class="easyui-datetimebox" type="date"
+						id="starttime" name="starttime" style="width: 200px;"
+						data-options="required:true" /> <span id="dea_passwordlabel2"
+						class="label">结束时间:</span> <input class="easyui-datetimebox"
+						type="date" id="endtime" name="endtime" style="width: 200px;"
+						data-options="required:true" /> <input type='submit'
+						value="生成区域图" onclick="drawarea()" /></td>
+				</tr>
+			</table>
+		</div>
+		<!--<div data-options="region:'center',iconCls:'icon-ok'">
+			<div data-dojo-type="dijit/layout/BorderContainer"
+				data-dojo-props="design:'headline', gutters:false"
+				style="width: 100%; height: 100%; margin: 0px; padding: 0px;">
+				<div id="mapDiv" data-dojo-type="dijit/layout/ContentPane"
+					data-dojo-props="region:'center'"
+					style="width: 100%; height: 100%; padding: 0px; margin: 0px; border: 0px solid #000;">
+				</div>
+			</div>
+		</div>-->
+		<div id="viewDiv"></div>
+	</div>
+
+</body>
+</html>

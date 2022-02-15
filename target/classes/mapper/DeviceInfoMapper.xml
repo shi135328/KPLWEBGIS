@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kpl.springboot.dao.DeviceInfoMapper">
+    <resultMap id="BaseResultMap" type="com.kpl.springboot.entity.DeviceInfo" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+         <result column="devicename" property="devicename" jdbcType="VARCHAR" />
+         <result column="devicecode" property="devicecode" jdbcType="VARCHAR" />
+         <result column="longitudeflag" property="longitudeflag" jdbcType="INTEGER" />
+         <result column="longitude" property="longitude" jdbcType="DOUBLE" />
+         <result column="latitudeflag" property="latitudeflag" jdbcType="INTEGER" />
+         <result column="latitude" property="latitude" jdbcType="DOUBLE" />
+         <result column="speed" property="speed" jdbcType="DOUBLE" />
+         <result column="direction" property="direction" jdbcType="DOUBLE" />
+         <result column="height" property="height" jdbcType="DOUBLE" />
+         <result column="satellite" property="satellite" jdbcType="INTEGER" />
+         <result column="islocation" property="islocation" jdbcType="INTEGER" />
+         <result column="gettime" property="gettime" jdbcType="TIMESTAMP" />
+         <result column="macstate" property="macstate" jdbcType="INTEGER" />
+         <result column="outsideU" property="outsideU" jdbcType="DOUBLE" />
+         <result column="factoryid" property="factoryid" jdbcType="INTEGER" />
+         <result column="brokerid" property="brokerid" jdbcType="INTEGER" />
+         <result column="customid" property="customid" jdbcType="INTEGER" />
+          <result column="factoryname" property="factoryname" jdbcType="VARCHAR" />
+           <result column="brokername" property="brokername" jdbcType="VARCHAR" />
+            <result column="customname" property="customname" jdbcType="VARCHAR" />
+    </resultMap>
+      <!-- 模糊查询 -->
+    <select id="finddeviceListByLike" resultMap="BaseResultMap" >
+        select * from deviceinfo
+        <where>
+            <if test="keyword != null and keyword != ''">
+               and (`devicename` like CONCAT('%',#{keyword},'%') or `devicecode` like CONCAT('%',#{keyword},'%'))
+            </if>
+            <if test="factoryid != null and factoryid != '' and factoryid != 0 ">
+               and `factoryid`= #{factoryid}
+            </if>
+            <if test="brokerid != null and brokerid != '' and brokerid != 0">
+               and `brokerid`= #{brokerid}
+            </if>
+            <if test="customid != null and customid != '' and customid != 0">
+               and `customid`= #{customid}
+            </if>
+        </where>
+            
+    </select>
+    
+     <!-- 模糊查询 -->
+    <select id="finddeviceListBycode" resultMap="BaseResultMap" >
+        select * from deviceinfo
+        <where>
+            <if test="devicecode != null and devicecode != '' ">
+               and `devicecode`= #{devicecode}
+            </if>
+        </where>
+            
+    </select>
+    
+    <update id="updateDevice" parameterType="map">
+        update deviceinfo
+        <set>
+            <if test="longitude != null and longitude != ''">
+                longitude = #{longitude},
+            </if>
+            <if test="longitudeflag != null and longitudeflag != ''">
+                `longitudeflag` = #{longitudeflag},
+            </if>
+            <if test="latitude != null and latitude != ''">
+                latitude = #{latitude},
+            </if>
+            <if test="latitudeflag != null and latitudeflag != ''">
+                `latitudeflag` = #{latitudeflag},
+            </if>
+            <if test="speed != null and speed != ''">
+                speed = #{speed},
+            </if>
+            <if test="direction != null and direction != ''">
+                direction = #{direction},
+            </if> 
+            <if test="height != null and height != ''">
+                height = #{height},
+            </if> 
+            <if test="satellite != null and satellite != ''">
+                satellite = #{satellite},
+            </if>
+             <if test="islocation != null and islocation != ''">
+                islocation = #{islocation},
+            </if>
+            <if test="macstate != null and macstate != ''">
+                macstate = #{macstate},
+            </if>
+            <if test="gettime != null and gettime != ''">
+                gettime = #{gettime},
+            </if>
+             <if test="outsideU != null and outsideU != ''">
+                outsideU = #{outsideU},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>
